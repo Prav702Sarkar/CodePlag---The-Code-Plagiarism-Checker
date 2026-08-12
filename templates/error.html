@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - CodePlag</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .error-hero {
+            background: linear-gradient(135deg, #0A0F14 0%, #1A1F26 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .error-code {
+            font-size: 8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00F5FF 0%, #FF008A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
+        }
+        
+        .error-icon {
+            font-size: 5rem;
+            color: #FF008A;
+            filter: drop-shadow(0 0 20px rgba(255, 0, 138, 0.5));
+        }
+    </style>
+</head>
+<body>
+    <div class="error-hero">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-lg" style="background: rgba(26, 31, 38, 0.9); backdrop-filter: blur(10px);">
+                        <div class="card-body text-center p-5">
+                            <div class="error-icon mb-4">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                            </div>
+                            
+                            {% if error_code %}
+                            <div class="error-code mb-4">{{ error_code }}</div>
+                            {% else %}
+                            <div class="error-code mb-4">ERROR</div>
+                            {% endif %}
+                            
+                            <h2 class="mb-4" style="color: #00F5FF;">{{ message }}</h2>
+                            
+                            <p class="mb-4 lead" style="color: #C6D3E1;">
+                                Something went wrong while processing your request.
+                            </p>
+                            
+                            {% if error_code == 413 %}
+                            <div class="alert alert-warning mb-4">
+                                <h5><i class="bi bi-file-earmark-x me-2"></i>File Size Limit Exceeded</h5>
+                                <p class="mb-0">The file you uploaded exceeds the maximum allowed size of 16MB. 
+                                Please try again with a smaller file or split your code into multiple files.</p>
+                            </div>
+                            {% endif %}
+                            
+                            {% if error_code == 429 %}
+                            <div class="alert alert-warning mb-4">
+                                <h5><i class="bi bi-hourglass-split me-2"></i>Rate Limit Exceeded</h5>
+                                <p class="mb-0">You've made too many requests in a short period of time. 
+                                Please wait a while before trying again.</p>
+                                <div class="mt-3">
+                                    <h6>Rate limits:</h6>
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="bi bi-check-circle me-2" style="color: #3DFF6A;"></i>200 requests per day</li>
+                                        <li><i class="bi bi-check-circle me-2" style="color: #3DFF6A;"></i>50 requests per hour</li>
+                                        <li><i class="bi bi-check-circle me-2" style="color: #3DFF6A;"></i>10 requests per minute</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-5">
+                                <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                                    <i class="bi bi-house-door me-2"></i>Back to Home
+                                </a>
+                                <button onclick="window.history.back()" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-arrow-left me-2"></i>Go Back
+                                </button>
+                            </div>
+                            
+                            <div class="mt-5 pt-4 border-top" style="border-color: rgba(0, 245, 255, 0.2) !important;">
+                                <p class="text-muted mb-2">Need help?</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="bi bi-question-circle me-1"></i>Help Center
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-envelope me-1"></i>Contact Support
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p style="color: #C6D3E1;">
+                            © 2025 CodePlag. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

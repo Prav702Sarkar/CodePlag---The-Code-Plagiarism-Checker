@@ -1,0 +1,500 @@
+/* Modern Plagiarism Checker Theme - Cyberpunk Style */
+:root {
+    --deep-space: #0A0F14;
+    --neon-cyan: #00F5FF;
+    --electric-magenta: #FF008A;
+    --signal-green: #3DFF6A;
+    --cool-white: #C6D3E1;
+    --card-bg: #1A1F26;
+    --hover-bg: #222831;
+}
+
+body {
+    background-color: var(--deep-space);
+    color: var(--cool-white);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+}
+
+/* Navbar - Cyberpunk Style */
+.navbar-dark.bg-dark {
+    background: linear-gradient(135deg, #0A0F14 0%, #1A1F26 100%) !important;
+    border-bottom: 2px solid var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+}
+
+.navbar-brand {
+    color: var(--neon-cyan) !important;
+    font-weight: 700;
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+}
+
+.navbar-brand i {
+    color: var(--neon-cyan);
+    filter: drop-shadow(0 0 8px rgba(0, 245, 255, 0.7));
+}
+
+/* Upload Area - Futuristic Design */
+.upload-area {
+    border: 3px dashed var(--neon-cyan);
+    border-radius: 12px;
+    padding: 50px 30px;
+    text-align: center;
+    margin: 30px 0;
+    background: rgba(26, 31, 38, 0.6);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-area::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        var(--neon-cyan), 
+        var(--electric-magenta), 
+        var(--neon-cyan));
+    z-index: -1;
+    border-radius: 14px;
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.upload-area.highlight {
+    border-color: transparent;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 245, 255, 0.2);
+}
+
+.upload-area.highlight::before {
+    opacity: 1;
+    animation: border-glow 2s linear infinite;
+}
+
+.upload-area i {
+    font-size: 4rem;
+    color: var(--neon-cyan);
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 15px rgba(0, 245, 255, 0.5));
+}
+
+.upload-area p {
+    color: var(--cool-white);
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+/* Buttons - Cyberpunk Style */
+.btn-primary {
+    background: linear-gradient(135deg, var(--neon-cyan) 0%, #00BCD4 100%);
+    border: none;
+    color: var(--deep-space);
+    font-weight: 600;
+    padding: 12px 30px;
+    border-radius: 8px;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 245, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 245, 255, 0.4);
+    color: var(--deep-space);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.2), 
+        transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+/* Browse Files Button Icon */
+.btn-primary i.bi-folder2-open {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    color: var(--deep-space);
+    opacity: 1;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+    margin-right: 0;
+    line-height: 1;
+    margin-top: -1px;
+    margin-bottom: -1px;
+}
+
+.btn-primary:hover i.bi-folder2-open {
+    transform: scale(1.15);
+    transition: transform 0.3s ease;
+}
+
+/* Browse Files Button Layout */
+.btn-primary.btn-lg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 35px;
+    line-height: 1.5;
+}
+
+.btn-primary span {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.5;
+}
+
+/* Modal Browse Files Button - Consistent Layout */
+.modal-body .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 30px;
+    line-height: 1.5;
+}
+
+.modal-body .btn-primary i.bi-folder2-open {
+    font-size: 1.5rem;
+    margin-top: -1px;
+    margin-bottom: -1px;
+}
+
+.modal-body .btn-primary span {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.5;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    background: transparent;
+    transition: all 0.3s;
+}
+
+.btn-outline-primary:hover {
+    background: var(--neon-cyan);
+    color: var(--deep-space);
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+}
+
+/* Cards - Glassmorphism */
+.card {
+    background: var(--card-bg);
+    border: 1px solid rgba(0, 245, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 245, 255, 0.1);
+    border-color: var(--neon-cyan);
+}
+
+.card-header {
+    background: linear-gradient(135deg, rgba(10, 15, 20, 0.9) 0%, rgba(26, 31, 38, 0.9) 100%);
+    border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+    color: var(--neon-cyan);
+    font-weight: 600;
+}
+
+/* Badges - Modern */
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, var(--neon-cyan) 0%, #00BCD4 100%) !important;
+    color: var(--deep-space);
+}
+
+.bg-info {
+    background: linear-gradient(135deg, var(--electric-magenta) 0%, #FF1493 100%) !important;
+    color: white;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, var(--signal-green) 0%, #00E676 100%) !important;
+    color: var(--deep-space);
+}
+
+/* Alerts - Glowing */
+.alert {
+    border: none;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    border-left: 4px solid;
+}
+
+.alert-info {
+    background: rgba(0, 245, 255, 0.1);
+    border-color: var(--neon-cyan);
+    color: var(--cool-white);
+}
+
+.alert-success {
+    background: rgba(61, 255, 106, 0.1);
+    border-color: var(--signal-green);
+    color: var(--cool-white);
+}
+
+.alert-warning {
+    background: rgba(255, 0, 138, 0.1);
+    border-color: var(--electric-magenta);
+    color: var(--cool-white);
+}
+
+/* Similarity Badges */
+.similarity-high {
+    background: linear-gradient(135deg, var(--electric-magenta) 0%, #FF1493 100%);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.similarity-medium {
+    background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+    color: white;
+}
+
+.similarity-low {
+    background: linear-gradient(135deg, var(--signal-green) 0%, #00E676 100%);
+    color: var(--deep-space);
+}
+
+/* Progress Indicators */
+.circular-progress .progress {
+    stroke: var(--neon-cyan);
+}
+
+.circular-progress .percentage {
+    color: var(--neon-cyan);
+    font-weight: 700;
+}
+
+/* Footer */
+footer {
+    background: linear-gradient(135deg, #0A0F14 0%, #1A1F26 100%);
+    border-top: 2px solid var(--neon-cyan);
+    margin-top: 50px;
+}
+
+footer h5 {
+    color: var(--neon-cyan);
+}
+
+footer a.text-light {
+    color: var(--cool-white) !important;
+    transition: color 0.3s;
+}
+
+footer a.text-light:hover {
+    color: var(--neon-cyan) !important;
+    text-decoration: none;
+}
+
+/* Chart Customization */
+#similarityChart {
+    background: rgba(26, 31, 38, 0.5);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+/* File List */
+.list-group-item {
+    background: transparent;
+    border-color: rgba(198, 211, 225, 0.1);
+    color: var(--cool-white);
+    transition: all 0.3s;
+}
+
+.list-group-item:hover {
+    background: rgba(0, 245, 255, 0.1);
+    transform: translateX(5px);
+}
+
+/* Match Items */
+.match-item {
+    background: rgba(26, 31, 38, 0.8);
+    border-left: 4px solid var(--neon-cyan);
+    border-radius: 0 8px 8px 0;
+    transition: all 0.3s;
+}
+
+.match-item:hover {
+    background: rgba(0, 245, 255, 0.15);
+    border-left-color: var(--electric-magenta);
+}
+
+/* Animations */
+@keyframes border-glow {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 138, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 0, 138, 0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading Animation */
+.loading-spinner {
+    border-color: var(--neon-cyan);
+    border-right-color: transparent;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--deep-space);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neon-cyan);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--electric-magenta);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .upload-area {
+        padding: 30px 15px;
+    }
+    
+    .upload-area i {
+        font-size: 3rem;
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+}
+
+/* Modal Styles for CodePlag */
+.modal-content {
+    background: var(--card-bg) !important;
+    border: 1px solid rgba(0, 245, 255, 0.2) !important;
+    border-radius: 12px !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0, 245, 255, 0.2) !important;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 245, 255, 0.2) !important;
+}
+
+.modal-title {
+    color: var(--neon-cyan) !important;
+}
+
+.btn-close {
+    filter: invert(1) !important;
+}
+
+/* How It Works Section Fix */
+#how-it-works {
+    scroll-margin-top: 80px;
+}
+
+/* Check Now Button */
+#check-now-btn {
+    transition: all 0.3s ease;
+    border-color: var(--neon-cyan) !important;
+    color: var(--neon-cyan) !important;
+    font-weight: 500;
+    padding: 8px 20px;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#check-now-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 245, 255, 0.3);
+    background: var(--neon-cyan) !important;
+    color: var(--deep-space) !important;
+    border-color: var(--neon-cyan) !important;
+}
+
+/* Accuracy Badge */
+.accuracy-badge {
+    background: linear-gradient(135deg, #00F5FF 0%, #3DFF6A 100%);
+    color: var(--deep-space);
+    font-weight: 600;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+/* File Upload Instructions */
+.upload-instruction {
+    background: rgba(0, 245, 255, 0.05);
+    border: 1px dashed var(--neon-cyan);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.upload-instruction i {
+    color: var(--neon-cyan);
+    font-size: 2rem;
+    margin-bottom: 10px;
+}

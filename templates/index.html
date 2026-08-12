@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodePlag - Advanced Code Plagiarism Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #0A0F14 0%, #1A1F26 100%);
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            right: -50%;
+            bottom: -50%;
+            background: radial-gradient(circle at center, 
+                rgba(0, 245, 255, 0.1) 0%, 
+                transparent 70%);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--neon-cyan);
+            margin-bottom: 20px;
+            background: rgba(0, 245, 255, 0.1);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .stats-counter {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--electric-magenta) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+        
+        .how-it-works-step {
+            background: rgba(26, 31, 38, 0.8);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--neon-cyan);
+            transition: all 0.3s ease;
+        }
+        
+        .how-it-works-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 245, 255, 0.1);
+        }
+        
+        .step-number {
+            background: var(--neon-cyan);
+            color: var(--deep-space);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand glow-text" href="{{ url_for('index') }}">
+                <i class="bi bi-shield-check me-2"></i>CodePlag
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#supported-languages">Languages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <button class="btn btn-outline-primary" id="check-now-btn">
+                            <i class="bi bi-search me-1"></i>Check Now
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-3 fw-bold mb-4 glow-text">
+                        <span style="color: var(--neon-cyan)">Code</span>
+                        <span style="color: var(--cool-white)">Plag</span>
+                    </h1>
+                    <p class="lead mb-4" style="color: var(--cool-white); font-size: 1.25rem;">
+                        Advanced code plagiarism detection with AI-powered analysis and real-time scanning across millions of repositories.
+                    </p>
+                    <div class="row mt-5">
+                        <div class="col-4 text-center">
+                            <div class="stats-counter">99.5%</div>
+                            <small class="text-muted">Accuracy</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="stats-counter">15+</div>
+                            <small class="text-muted">Languages</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="stats-counter">∞</div>
+                            <small class="text-muted">Sources</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-lg" style="background: rgba(26, 31, 38, 0.8); backdrop-filter: blur(10px);">
+                        <div class="card-body p-5">
+                            <h4 class="card-title text-center mb-4" style="color: var(--neon-cyan);">
+                                <i class="bi bi-robot me-2"></i>Upload & Analyze
+                            </h4>
+                            <form method="post" action="{{ url_for('check_plagiarism_route') }}" enctype="multipart/form-data" id="upload-form">
+                                <div class="upload-area" id="upload-area">
+                                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                                    <h5 class="mt-3 mb-2">Drop your code files here</h5>
+                                    <p class="text-muted mb-3">Supports all major programming languages</p>
+                                    <input type="file" name="files" multiple class="d-none" id="file-input" required>
+                                    <button type="button" class="btn btn-lg btn-primary mt-2" onclick="document.getElementById('file-input').click()">
+                                        <i class="bi bi-folder2-open"></i>
+                                        <span>Browse Files</span>
+                                    </button>
+                                    <small class="form-text d-block mt-3" style="color: var(--cool-white);">
+                                        Maximum file size: 3MB per file <br>• Files over 3MB take hours to process - split them into smaller parts and upload as a ZIP <br>• Supports: .zip, .py, .pyw, .js, .jsx, .ts, .tsx, .java, .c, .h, .cpp, .cc, .cxx, .hpp, .hh, .cs, .rb, .php, .go, .rs, .swift, .kt, .html, .htm, .css, .scala, .sh, .bash, .r, .pl, .pm, .hs, .lua
+                                    </small>
+                                </div>
+                                
+                                <div id="file-list" class="mt-4"></div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary w-100 py-3" id="submit-btn" disabled>
+                                        <i class="bi bi-search me-2"></i> Scan for Plagiarism
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container py-5">
+        <div id="features" class="mt-5 pt-5">
+            <h2 class="text-center mb-5" style="color: var(--neon-cyan);">Why Choose CodePlag?</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-cpu-fill"></i>
+                            </div>
+                            <h5 class="card-title mt-3" style="color: var(--neon-cyan);">AI-Powered Analysis</h5>
+                            <p class="card-text" style="color: var(--cool-white);">
+                                Advanced algorithms detect sophisticated code obfuscation techniques with 99.5% accuracy.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-github"></i>
+                            </div>
+                            <h5 class="card-title mt-3" style="color: var(--neon-cyan);">GitHub Intelligence</h5>
+                            <p class="card-text" style="color: var(--cool-white);">
+                                Real-time scanning across 200M+ GitHub repositories with intelligent code fingerprinting.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </div>
+                            <h5 class="card-title mt-3" style="color: var(--neon-cyan);">Zero-Knowledge Security</h5>
+                            <p class="card-text" style="color: var(--cool-white);">
+                                Your code is analyzed locally. No data is stored on our servers. Complete privacy guaranteed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="supported-languages" class="mt-5 pt-5">
+            <h2 class="text-center mb-5" style="color: var(--neon-cyan);">Supported Languages</h2>
+            <div class="row justify-content-center">
+                {% for language in languages %}
+                <div class="col-6 col-md-3 col-lg-2 mb-3">
+                    <div class="card text-center py-3" style="background: rgba(0, 245, 255, 0.05);">
+                        <div style="color: var(--neon-cyan); font-weight: 500;">{{ language }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div id="how-it-works" class="mt-5 pt-5">
+            <h2 class="text-center mb-5" style="color: var(--neon-cyan);">How It Works</h2>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="how-it-works-step">
+                        <div class="step-number">1</div>
+                        <h5 style="color: var(--neon-cyan);">Upload Your Code</h5>
+                        <p style="color: var(--cool-white);">
+                            <strong>Drag and drop or click to upload the file</strong> and then proceed for the check plagiarism.
+                            Upload individual source code files or zip archives containing multiple files.
+                        </p>
+                    </div>
+                    
+                    <div class="how-it-works-step">
+                        <div class="step-number">2</div>
+                        <h5 style="color: var(--neon-cyan);">Code Normalization</h5>
+                        <p style="color: var(--cool-white);">
+                            We normalize your code by removing comments, standardizing variable names, 
+                            and eliminating whitespace to focus on the core logic and structure.
+                        </p>
+                    </div>
+                    
+                    <div class="how-it-works-step">
+                        <div class="step-number">3</div>
+                        <h5 style="color: var(--neon-cyan);">Multi-Source Comparison</h5>
+                        <p style="color: var(--cool-white);">
+                            Your code is compared against GitHub repositories, Stack Overflow, 
+                            and other web sources using advanced similarity algorithms.
+                        </p>
+                    </div>
+                    
+                    <div class="how-it-works-step">
+                        <div class="step-number">4</div>
+                        <h5 style="color: var(--neon-cyan);">Detailed Report</h5>
+                        <p style="color: var(--cool-white);">
+                            Receive a comprehensive report showing matches, similarity percentages, 
+                            and links to potential sources with actionable recommendations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3" style="color: var(--neon-cyan);">CodePlag</h5>
+                    <p style="color: var(--cool-white);">
+                        Advanced code plagiarism detection powered by AI and real-time scanning across global code repositories.
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="mb-3" style="color: var(--neon-cyan);">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#features" class="text-light">Features</a></li>
+                        <li><a href="#supported-languages" class="text-light">Languages</a></li>
+                        <li><a href="#how-it-works" class="text-light">How It Works</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="mb-3" style="color: var(--neon-cyan);">Legal</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light">Privacy Policy</a></li>
+                        <li><a href="#" class="text-light">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(0, 245, 255, 0.2);">
+            <p class="mb-0 text-center" style="color: var(--cool-white);">
+                © 2025 CodePlag. All rights reserved. | Made with <i class="bi bi-heart-fill" style="color: var(--electric-magenta);"></i> for developers <br>
+                Created by Praveen Kumar Sarkar
+            </p>
+        </div>
+    </footer>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--card-bg); border: 1px solid rgba(0, 245, 255, 0.2);">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(0, 245, 255, 0.2);">
+                    <h5 class="modal-title" style="color: var(--neon-cyan);" id="uploadModalLabel">
+                        <i class="bi bi-cloud-upload me-2"></i>Upload Files
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" 
+                            style="filter: invert(1);"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-area text-center py-4">
+                        <i class="bi bi-cloud-arrow-up display-4 mb-3" style="color: var(--neon-cyan);"></i>
+                        <h6 style="color: var(--cool-white);">Drag & drop files here or click to browse</h6>
+                        <p class="text-muted mb-3">Supports .py, .js, .ts, .java, .c, .cpp, .cs, .rb, .php, .go, .rs, .swift, .kt, .html, .css, .scala, .sh, .r, .pl, .hs, .lua and more</p>
+                        <input type="file" name="files" multiple class="d-none" id="modal-file-input">
+                        <button type="button" class="btn btn-primary mt-2" onclick="document.getElementById('modal-file-input').click()">
+                            <i class="bi bi-folder2-open"></i>
+                            <span>Browse Files</span>
+                        </button>
+                    </div>
+                    <div id="modal-file-list" class="mt-3"></div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(0, 245, 255, 0.2);">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="modal-submit-btn" disabled>
+                        <i class="bi bi-search me-2"></i>Start Scan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Initialize modal for Check Now button
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkNowBtn = document.getElementById('check-now-btn');
+            const uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
+            const modalFileInput = document.getElementById('modal-file-input');
+            const modalSubmitBtn = document.getElementById('modal-submit-btn');
+            
+            // Open modal when Check Now button is clicked
+            checkNowBtn.addEventListener('click', function() {
+                uploadModal.show();
+            });
+            
+            // Handle file selection in modal
+            modalFileInput.addEventListener('change', function() {
+                const files = this.files;
+                const fileList = document.getElementById('modal-file-list');
+                
+                if (files.length === 0) {
+                    fileList.innerHTML = '<p class="text-muted text-center">No files selected</p>';
+                    modalSubmitBtn.disabled = true;
+                    return;
+                }
+                
+                let listHTML = '<div class="list-group">';
+                for (let i = 0; i < files.length; i++) {
+                    listHTML += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center" 
+                             style="background: transparent; border-color: rgba(0, 245, 255, 0.1);">
+                            <div>
+                                <i class="bi bi-file-code me-2" style="color: var(--neon-cyan);"></i>
+                                <span style="color: var(--cool-white);">${files[i].name}</span>
+                            </div>
+                            <span class="badge" style="background: rgba(0, 245, 255, 0.1); color: var(--neon-cyan);">
+                                ${(files[i].size / 1024).toFixed(2)} KB
+                            </span>
+                        </div>
+                    `;
+                }
+                listHTML += '</div>';
+                fileList.innerHTML = listHTML;
+                
+                // Warn and block if any selected file exceeds 3MB (processing takes too long)
+                if (typeof getLargeFiles === 'function' && getLargeFiles(files).length > 0) {
+                    showLargeFileWarning(files);
+                    modalSubmitBtn.disabled = true;
+                } else {
+                    modalSubmitBtn.disabled = false;
+                }
+            });
+            
+            // Handle modal form submission
+            modalSubmitBtn.addEventListener('click', function() {
+                const files = modalFileInput.files;
+                if (files.length === 0) {
+                    alert('Please select at least one file');
+                    return;
+                }
+                
+                // Transfer files to main form
+                const mainFileInput = document.getElementById('file-input');
+                const dataTransfer = new DataTransfer();
+                for (let i = 0; i < files.length; i++) {
+                    dataTransfer.items.add(files[i]);
+                }
+                mainFileInput.files = dataTransfer.files;
+                
+                // Update main file list
+                if (typeof updateFileList === 'function') {
+                    updateFileList(mainFileInput.files);
+                }
+                
+                // Close modal
+                uploadModal.hide();
+                
+                // Submit the form
+                document.getElementById('upload-form').submit();
+            });
+        });
+    </script>
+</body>
+</html>

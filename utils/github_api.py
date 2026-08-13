@@ -25,10 +25,11 @@ _cache_write_count = 0
 CACHE_TTL = 3600  # 1 hour
 
 
-def _purge_expired_cache():
+def purge_expired_cache():
     """Delete expired cache files so the on-disk cache can't grow unbounded on
-    the small Render free disk (512MB). Uses file mtime - cache files are only
-    ever written once, so mtime is a cheap, reliable proxy for age."""
+    the small Render free disk (512MB). Uses the same timestamp field that
+    get_cached_result() validates against, so purge and read always agree
+    (falls back to file mtime for unreadable/corrupt files)."""
     try:
         now = time.time()
         for name in os.listdir(cache_dir):
@@ -36,16 +37,26 @@ def _purge_expired_cache():
                 continue
             path = os.path.join(cache_dir, name)
             try:
-                if now - os.path.getmtime(path) > CACHE_TTL:
+                with open(path, 'r') as f:
+                    data = json.load(f)
+                age = now - data.get('timestamp', 0)
+                # Corrupt/missing timestamp: treat as expired rather than keeping it forever
+                if age > CACHE_TTL or age < 0:
                     os.remove(path)
             except OSError:
                 pass
+            except Exception:
+                # Unreadable/corrupt file - remove it so it can't accumulate
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
     except OSError:
         pass
 
 
 # Clean up stale cache entries from previous runs at startup
-_purge_expired_cache()
+purge_expired_cache()
 
 def get_repo_license(repo):
     """Get the license of a repository"""
@@ -97,7 +108,7 @@ def cache_result(cache_key, result):
         # Sweep expired entries occasionally so the disk cache stays small
         _cache_write_count += 1
         if _cache_write_count % 100 == 0:
-            _purge_expired_cache()
+            purge_expired_cache()
     except:
         pass  # Silently fail if caching doesn't work
 
@@ -217,21 +228,19 @@ def search_github_code(query, language=None, max_results=10):
                         # Get file content safely
                         repo = content_file.repository
                         
-                        # Try to decode content with fallback
-                        try:
-                            file_content = content_file.decoded_content.decode('utf-8')
-                        except UnicodeDecodeError:
-                            # Try with error handling for non-UTF8 files
-                            file_content = content_file.decoded_content.decode('utf-8', errors='ignore')
-                        except Exception as decode_error:
-                            logger.debug(f"Failed to decode file content: {decode_error}")
-                            continue
-                        
                         # Cap stored content: keeps per-request memory and on-disk
                         # cache files small on the 512MB free plan. 64KB is far more
                         # than enough for the core-block extraction used for matching.
-                        if len(file_content) > Config.GITHUB_RESULT_CONTENT_LIMIT:
-                            file_content = file_content[:Config.GITHUB_RESULT_CONTENT_LIMIT]
+                        # Truncate the raw bytes BEFORE decoding so we never hold a
+                        # huge decoded string for oversized matched files.
+                        try:
+                            raw_content = content_file.decoded_content
+                            if len(raw_content) > Config.GITHUB_RESULT_CONTENT_LIMIT:
+                                raw_content = raw_content[:Config.GITHUB_RESULT_CONTENT_LIMIT]
+                            file_content = raw_content.decode('utf-8', errors='ignore')
+                        except Exception as decode_error:
+                            logger.debug(f"Failed to decode file content: {decode_error}")
+                            continue
                         
                         # Build result with all required fields
                         match = {

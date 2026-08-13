@@ -85,9 +85,16 @@ def normalize_curly_brace_code(code):
     return code.strip()
 
 def calculate_similarity(text1, text2):
-    """Calculate similarity between two texts using SequenceMatcher"""
+    """Calculate similarity between two texts using SequenceMatcher.
+
+    Inputs are capped so the comparison can't become a memory/time bomb on
+    very large strings (e.g. a 3MB upload vs. a large matched file)."""
     if not text1 or not text2:
         return 0
+    if len(text1) > Config.SIMILARITY_MAX_INPUT_CHARS:
+        text1 = text1[:Config.SIMILARITY_MAX_INPUT_CHARS]
+    if len(text2) > Config.SIMILARITY_MAX_INPUT_CHARS:
+        text2 = text2[:Config.SIMILARITY_MAX_INPUT_CHARS]
     return SequenceMatcher(None, text1, text2).ratio()
 
 def generate_code_fingerprint(code, language):

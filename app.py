@@ -4,8 +4,10 @@ load_dotenv()
 
 import os
 import sys
+import gc
 import logging
 import time
+from threading import Lock
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from config import Config
 
@@ -31,6 +33,48 @@ app.config.from_object(Config)
 
 # Initialize rate limiting
 limiter = init_limiter(app)
+
+# Only one heavy scan runs at a time. Concurrent scans are the fastest way to
+# blow past the 512MB free-plan budget (each scan holds upload data, extracted
+# blocks and search results in memory). Light requests still run on other threads.
+scan_lock = Lock()
+
+
+def get_worker_memory_mb():
+    """Return the current process RSS in MB, or None if not measurable
+    (e.g. on Windows dev machines). Used to refuse scans under memory pressure
+    instead of letting the OOM killer SIGKILL the worker."""
+    try:
+        with open('/proc/self/status', 'r') as f:
+            for line in f:
+                if line.startswith('VmRSS:'):
+                    return int(line.split()[1]) // 1024
+    except Exception:
+        pass
+    return None
+
+
+def free_memory(full=False):
+    """Release memory held by completed file processing so the next file or
+    scan starts from a clean heap instead of carrying the previous scan's
+    leftovers:
+      - gc.collect() reclaims unreferenced cycles (AST trees, parsed HTML,
+        BeautifulSoup documents, ...)
+      - when a whole scan finishes (full=True), also purge expired on-disk
+        result-cache entries so the 512MB free-plan disk stays small too.
+    Logs the RSS before/after so the effect is visible in Render logs."""
+    before = get_worker_memory_mb()
+    gc.collect()
+    if full:
+        try:
+            from utils.github_api import purge_expired_cache
+            purge_expired_cache()
+        except Exception:
+            pass
+    after = get_worker_memory_mb()
+    if before is not None and after is not None:
+        logger.info(f"Memory freed: RSS {before}MB -> {after}MB")
+    return after
 
 def process_single_file(file, filename):
     """Process a single file and return results"""
@@ -145,6 +189,9 @@ def process_zip_file(file, filename):
                     processed_count += 1
             else:
                 skipped_files.append(extracted_name)
+            # Release per-file memory (AST trees, parsed web pages, ...) so a
+            # large archive doesn't accumulate leftovers across all its files
+            free_memory()
         
         # Surface skipped files instead of silently dropping them
         if not results and skipped_files:
@@ -247,6 +294,11 @@ def index():
 @limiter.limit("10 per minute")
 def check_plagiarism_route():
     """Handle plagiarism check requests"""
+    # Serialize scans - see scan_lock comment above
+    if not scan_lock.acquire(blocking=False):
+        logger.warning("Rejected /check - another scan is already running")
+        flash('Another scan is already running. Please wait a moment and try again.')
+        return redirect(url_for('index'))
     try:
         logger.info("="*60)
         logger.info("NEW PLAGIARISM CHECK REQUEST RECEIVED")
@@ -264,6 +316,21 @@ def check_plagiarism_route():
         if not files or all(file.filename == '' for file in files):
             logger.warning("All files have empty filenames")
             flash('No files selected')
+            return redirect(url_for('index'))
+
+        # Bound how many files one request may process - each one holds
+        # extracted blocks and search results in memory until the scan ends
+        if len(files) > Config.MAX_FILES_PER_REQUEST:
+            logger.warning(f"Upload blocked - {len(files)} files exceeds the {Config.MAX_FILES_PER_REQUEST}-file limit")
+            flash(f'Too many files. Please upload at most {Config.MAX_FILES_PER_REQUEST} files at a time.')
+            return redirect(url_for('index'))
+
+        # Refuse to start a scan when the worker is already under memory
+        # pressure, instead of letting the OOM killer SIGKILL us mid-request
+        current_mb = get_worker_memory_mb()
+        if current_mb is not None and current_mb > Config.MAX_WORKER_MEMORY_MB:
+            logger.warning(f"Rejected /check - worker RSS {current_mb}MB exceeds {Config.MAX_WORKER_MEMORY_MB}MB")
+            flash('The server is under heavy load right now. Please wait a moment and try again.')
             return redirect(url_for('index'))
         
         # Block files larger than 3MB - they take hours to process
@@ -319,6 +386,10 @@ def check_plagiarism_route():
                 error_msg = f"File type not supported: {file.filename}"
                 error_messages.append(error_msg)
                 logger.debug(error_msg)
+            
+            # Free this file's memory before starting the next one so each
+            # scan starts clean and a multi-file request stays low-RSS
+            free_memory()
         
         # Add error messages to flash
         for error in error_messages:
@@ -363,6 +434,11 @@ def check_plagiarism_route():
         logger.error(f"Error during plagiarism check: {str(e)}", exc_info=True)
         flash('An error occurred during the plagiarism check. Please try again.')
         return redirect(url_for('index'))
+    finally:
+        # Full cleanup after the scan: GC + purge expired on-disk cache
+        # entries so the next scan starts fresh
+        free_memory(full=True)
+        scan_lock.release()
 
 @app.errorhandler(404)
 def not_found_error(error):

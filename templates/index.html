@@ -115,6 +115,17 @@
 
     <section class="hero-section">
         <div class="container">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-warning alert-dismissible fade show mt-4" role="alert"
+                             style="background: rgba(255, 0, 138, 0.1); border: 1px solid rgba(255, 0, 138, 0.3); border-left: 4px solid #FF008A; color: var(--cool-white);">
+                            <i class="bi bi-info-circle me-2"></i>{{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <h1 class="display-3 fw-bold mb-4 glow-text">

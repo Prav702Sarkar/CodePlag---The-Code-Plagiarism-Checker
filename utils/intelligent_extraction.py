@@ -3,6 +3,8 @@ import re
 import logging
 from typing import List, Dict, Optional, Tuple
 
+from config import Config
+
 logger = logging.getLogger(__name__)
 
 class IntelligentCodeExtractor:
@@ -28,7 +30,14 @@ class IntelligentCodeExtractor:
         """
         try:
             logger.info(f"Starting intelligent code extraction for {language}")
-            
+
+            # AST parsing and regex extraction are super-linear in source size.
+            # Cap what we extract from so a giant upload can't balloon memory
+            # (real code files are almost always well under this limit).
+            if len(code_content) > Config.EXTRACT_MAX_SOURCE_CHARS:
+                logger.warning(f"Truncating {len(code_content)} chars of source to {Config.EXTRACT_MAX_SOURCE_CHARS} for extraction")
+                code_content = code_content[:Config.EXTRACT_MAX_SOURCE_CHARS]
+
             if language == 'python':
                 return self._extract_python_core(code_content)
             elif language in ['javascript', 'typescript']:
@@ -391,7 +400,14 @@ class IntelligentCodeExtractor:
         """Format the extraction result"""
         # Sort blocks by complexity (most complex first)
         core_blocks.sort(key=lambda x: x.get('complexity', 0), reverse=True)
-        
+
+        # Bound memory: cap the number of blocks and the size of each block so
+        # minified/obfuscated files can't produce huge retained blocks.
+        core_blocks = core_blocks[:Config.MAX_EXTRACTED_BLOCKS]
+        for block in core_blocks:
+            if len(block['code']) > Config.MAX_EXTRACTED_BLOCK_CHARS:
+                block['code'] = block['code'][:Config.MAX_EXTRACTED_BLOCK_CHARS]
+
         # Create summary
         total_blocks = len(core_blocks)
         total_lines = sum(block['code'].count('\n') + 1 for block in core_blocks)
@@ -424,7 +440,11 @@ class IntelligentCodeExtractor:
                 core_lines.append(line)
         
         fallback_code = '\n'.join(core_lines)
-        
+
+        # Bound the fallback block size too (same memory reason as above)
+        if len(fallback_code) > Config.MAX_EXTRACTED_BLOCK_CHARS:
+            fallback_code = fallback_code[:Config.MAX_EXTRACTED_BLOCK_CHARS]
+
         return {
             'language': language,
             'core_blocks': [{

@@ -304,7 +304,10 @@ The repo ships with a `render.yaml` tuned for Render's free tier (**512 MB RAM**
 - **Single worker, 2 threads** — each gunicorn worker duplicates the whole app in RAM, so the config keeps exactly one worker and serves concurrent requests with threads that *share* that memory.
 - **Worker recycling** (`--max-requests`) — periodically restarts the worker to prevent slow memory leaks from accumulating.
 - **300s request timeout** — scans take 10–30 s per file; the default 30 s timeout would kill them mid-request.
-- **Bounded request memory** — ZIP extraction caps uncompressed size (30 MB total, 3 MB per file, 100 files) and GitHub match contents are truncated to 64 KB, so no single request can blow the 512 MB budget.
+- **Serialized scans** — only one plagiarism scan runs at a time (a second upload gets a friendly "scan in progress" message instead of OOM-killing the worker). Light requests like `/` and `/health` still respond.
+- **Bounded request memory** — every stage of a request is capped so nothing can spike past the 512 MB budget: ZIP extraction (30 MB total / 3 MB per file / 25 files), files per request (10), scraped pages (200 KB parsed), GitHub match contents (64 KB), code-extraction source (250 KB) and extracted blocks (25 blocks × 16 KB), and `SequenceMatcher` inputs (64 KB).
+- **Memory guard** — `/check` refuses new scans when the worker's RSS exceeds 400 MB, turning would-be OOM kills into a friendly "try again" message.
+- **Per-file memory freeing** — after every file (and after every scan) the heap is garbage-collected and expired on-disk cache entries are purged, so each new scan starts from a clean, low-RSS worker (RSS before/after is logged on Render).
 - **Slimmed dependencies** — unused heavy/native packages (`lxml`, `waitress`, `chardet`) were removed; BeautifulSoup uses the built-in `html.parser`.
 - **Production logging** — DEBUG logging (which retains lots of strings) is only enabled when `DEBUG=true`.
 

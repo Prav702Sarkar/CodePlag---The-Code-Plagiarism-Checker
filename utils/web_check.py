@@ -12,7 +12,7 @@ try:
     from config import Config
 except ImportError:
     class Config:
-        pass
+        MAX_WEB_PAGE_CHARS = 200 * 1024
 
 # Attempt to import specific plagiarism helpers, but provide local fallbacks if missing
 try:
@@ -219,8 +219,12 @@ def extract_code_from_url(url, timeout=8):
         response = requests.get(url, headers=get_random_headers(), timeout=timeout)
         if response.status_code != 200:
             return None
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Cap the amount of HTML that gets parsed. BeautifulSoup builds a parse
+        # tree that is many times the size of the raw text, so parsing a huge
+        # page can spike memory past the 512MB free-plan budget.
+        raw_html = response.content[:Config.MAX_WEB_PAGE_CHARS]
+        soup = BeautifulSoup(raw_html, 'html.parser')
         
         # Remove non-content elements first
         for tag in soup(['script', 'style', 'nav', 'footer', 'header', 'aside', 'iframe', 'noscript']):

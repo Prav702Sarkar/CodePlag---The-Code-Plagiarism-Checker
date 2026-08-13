@@ -3,17 +3,27 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+import sys
 import logging
 import time
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from config import Config
+
+# Windows dev consoles default to cp1252 and crash on the emoji log prints.
+# Force UTF-8 with lossy fallback so the app runs identically everywhere
+# (Render/Linux already uses UTF-8).
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 from utils.file_processing import allowed_file, extract_zip, get_file_language, is_text_file, is_github_supported_language
 from utils.plagiarism_check import check_plagiarism
 from utils.security import init_limiter, sanitize_filename, validate_file_content
 from utils.web_check import check_web_sources
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Set up logging. DEBUG-level logs generate a lot of retained string data and
+# slow the app down; keep them off in production (Render free = 512MB RAM).
+log_level = logging.DEBUG if Config.DEBUG else logging.INFO
+logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='static', template_folder='templates')

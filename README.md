@@ -291,8 +291,24 @@ The two scores are combined with a **70% text / 30% structure** weight. Every co
 | Max file size | **3 MB** per file (client + server enforced) |
 | Typical processing | 10–30 s per file (varies with API/network) |
 | Code noise reduction | ~61% via intelligent extraction |
-| Result caching | 1 hour |
+| Result caching | 1 hour (auto-purged) |
 | Rate limits | 200/day & 50/hour default; 10/min on `/check` |
+| Peak memory | tuned for **512 MB** (Render free plan) |
+
+---
+
+## ☁️ Deploy to Render (Free Plan)
+
+The repo ships with a `render.yaml` tuned for Render's free tier (**512 MB RAM**, 512 MB disk):
+
+- **Single worker, 2 threads** — each gunicorn worker duplicates the whole app in RAM, so the config keeps exactly one worker and serves concurrent requests with threads that *share* that memory.
+- **Worker recycling** (`--max-requests`) — periodically restarts the worker to prevent slow memory leaks from accumulating.
+- **300s request timeout** — scans take 10–30 s per file; the default 30 s timeout would kill them mid-request.
+- **Bounded request memory** — ZIP extraction caps uncompressed size (30 MB total, 3 MB per file, 100 files) and GitHub match contents are truncated to 64 KB, so no single request can blow the 512 MB budget.
+- **Slimmed dependencies** — unused heavy/native packages (`lxml`, `waitress`, `chardet`) were removed; BeautifulSoup uses the built-in `html.parser`.
+- **Production logging** — DEBUG logging (which retains lots of strings) is only enabled when `DEBUG=true`.
+
+> ⚠️ Free-tier instances **spin down after 15 minutes of inactivity** and take ~30–60 s to cold-start on the next request — the first request after idle will be slow. This is normal Render free behavior, not an app bug.
 
 ---
 

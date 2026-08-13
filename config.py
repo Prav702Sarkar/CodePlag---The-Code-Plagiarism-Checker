@@ -50,5 +50,12 @@ class Config:
     # Similarity threshold for reporting (lowered for better detection)
     SIMILARITY_THRESHOLD = 0.3
     
+    # Memory bounds for the Render free plan (512MB RAM). Keep peak request
+    # memory bounded no matter how large the uploaded archive or matched files are.
+    GITHUB_RESULT_CONTENT_LIMIT = 64 * 1024  # 64KB - cap stored file content per GitHub match
+    ZIP_MAX_FILES = 100  # max files extracted from a single ZIP
+    ZIP_MAX_TOTAL_SIZE = 30 * 1024 * 1024  # 30MB - max total uncompressed size per ZIP
+    ZIP_MAX_FILE_SIZE = 3 * 1024 * 1024  # 3MB - matches the single-file upload limit
+
     # Debug settings
     DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'

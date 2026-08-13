@@ -4,7 +4,12 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    # Memory-optimized for the free plan (512MB RAM):
+    #  - single worker (each worker duplicates the whole app in RAM)
+    #  - 2 threads share that worker's memory instead of forking extra processes
+    #  - 300s timeout so long scans are not killed mid-request
+    #  - --max-requests recycles the worker periodically to prevent slow memory leaks
+    startCommand: gunicorn app:app --workers 1 --threads 2 --timeout 300 --max-requests 500 --max-requests-jitter 100 --access-logfile - --error-logfile -
     envVars:
       - key: GITHUB_API_KEY
         sync: false
@@ -12,3 +17,5 @@ services:
         sync: false
       - key: DEBUG
         value: "False"
+      - key: PYTHONUNBUFFERED
+        value: "1"

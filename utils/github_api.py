@@ -21,6 +21,32 @@ os.makedirs(cache_dir, exist_ok=True)
 _rate_limit_cache = {'timestamp': 0.0, 'ok': True, 'error': None}
 RATE_LIMIT_CACHE_TTL = 20  # seconds
 
+_cache_write_count = 0
+CACHE_TTL = 3600  # 1 hour
+
+
+def _purge_expired_cache():
+    """Delete expired cache files so the on-disk cache can't grow unbounded on
+    the small Render free disk (512MB). Uses file mtime - cache files are only
+    ever written once, so mtime is a cheap, reliable proxy for age."""
+    try:
+        now = time.time()
+        for name in os.listdir(cache_dir):
+            if not name.endswith('.json'):
+                continue
+            path = os.path.join(cache_dir, name)
+            try:
+                if now - os.path.getmtime(path) > CACHE_TTL:
+                    os.remove(path)
+            except OSError:
+                pass
+    except OSError:
+        pass
+
+
+# Clean up stale cache entries from previous runs at startup
+_purge_expired_cache()
+
 def get_repo_license(repo):
     """Get the license of a repository"""
     try:
@@ -46,7 +72,7 @@ def get_cached_result(cache_key):
             cache_data = json.load(f)
         
         # Check if cache is still valid (1 hour)
-        if time.time() - cache_data['timestamp'] < 3600:
+        if time.time() - cache_data['timestamp'] < CACHE_TTL:
             return cache_data['result']
         else:
             # Cache expired, delete the file
@@ -57,6 +83,7 @@ def get_cached_result(cache_key):
 
 def cache_result(cache_key, result):
     """Cache a result"""
+    global _cache_write_count
     cache_file = os.path.join(cache_dir, f"{cache_key}.json")
     
     cache_data = {
@@ -67,6 +94,10 @@ def cache_result(cache_key, result):
     try:
         with open(cache_file, 'w') as f:
             json.dump(cache_data, f)
+        # Sweep expired entries occasionally so the disk cache stays small
+        _cache_write_count += 1
+        if _cache_write_count % 100 == 0:
+            _purge_expired_cache()
     except:
         pass  # Silently fail if caching doesn't work
 
@@ -195,6 +226,12 @@ def search_github_code(query, language=None, max_results=10):
                         except Exception as decode_error:
                             logger.debug(f"Failed to decode file content: {decode_error}")
                             continue
+                        
+                        # Cap stored content: keeps per-request memory and on-disk
+                        # cache files small on the 512MB free plan. 64KB is far more
+                        # than enough for the core-block extraction used for matching.
+                        if len(file_content) > Config.GITHUB_RESULT_CONTENT_LIMIT:
+                            file_content = file_content[:Config.GITHUB_RESULT_CONTENT_LIMIT]
                         
                         # Build result with all required fields
                         match = {

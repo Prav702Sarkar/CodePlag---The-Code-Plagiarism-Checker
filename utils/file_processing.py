@@ -42,8 +42,14 @@ def allowed_file(filename):
     return False
 
 def extract_zip(file_stream):
-    """Extract zip file and return dictionary of file contents"""
+    """Extract zip file and return dictionary of file contents.
+
+    Memory-safe for the Render free plan (512MB RAM): the uncompressed size of
+    every file, the total uncompressed size, and the file count are all bounded
+    so a hostile or oversized archive can't balloon process memory.
+    """
     extracted_files = {}
+    total_size = 0
     
     try:
         with zipfile.ZipFile(file_stream, 'r') as z:
@@ -52,12 +58,25 @@ def extract_zip(file_stream):
                     filename = file_info.filename
                     # Skip hidden files and directories
                     if not os.path.basename(filename).startswith('.'):
+                        # Per-file size cap (matches the single-file upload limit)
+                        if file_info.file_size > Config.ZIP_MAX_FILE_SIZE:
+                            logger.debug(f"Skipped oversized file in ZIP: {filename} ({file_info.file_size} bytes)")
+                            continue
+                        # Total uncompressed size cap - stops zip-bomb style expansion
+                        if total_size + file_info.file_size > Config.ZIP_MAX_TOTAL_SIZE:
+                            logger.warning(f"ZIP total uncompressed size limit ({Config.ZIP_MAX_TOTAL_SIZE} bytes) reached; stopping extraction")
+                            break
+                        # File count cap
+                        if len(extracted_files) >= Config.ZIP_MAX_FILES:
+                            logger.warning(f"ZIP contains more than {Config.ZIP_MAX_FILES} files; stopping extraction")
+                            break
                         with z.open(file_info) as f:
                             content = f.read()
                             # Try to decode as text, skip binary files
                             try:
                                 content_str = content.decode('utf-8')
                                 extracted_files[filename] = content_str
+                                total_size += len(content_str)
                                 logger.debug(f"Extracted file: {filename}, Size: {len(content_str)}")
                             except UnicodeDecodeError:
                                 # Skip binary files

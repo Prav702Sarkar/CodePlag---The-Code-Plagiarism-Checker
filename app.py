@@ -434,4 +434,5 @@ if __name__ == '__main__':
     logger.info("Starting Advanced Plagiarism Checker")
     logger.info(f"Supported languages: {list(Config.LANGUAGE_EXTENSIONS.keys())}")
     logger.info(f"Supported extensions: {[ext for exts in Config.LANGUAGE_EXTENSIONS.values() for ext in exts]}")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=os.environ.get('DEBUG', 'False').lower() == 'true', host='0.0.0.0', port=port)
